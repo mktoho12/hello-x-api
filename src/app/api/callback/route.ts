@@ -83,37 +83,4 @@ export async function POST(request: Request) {
 
     return twitterAPIResponse.body.access_token
   }
-
-  async function fetchPostTweetAPI(accessToken: string, status: string) {
-    const url = 'https://api.x.com/2/tweets'
-    const twitterAPIRequest: RequestInit = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-        'User-Agent': 'Twitter Client by mktoho',
-      },
-      body: JSON.stringify({ status }),
-    }
-
-    const response = await fetch(url, twitterAPIRequest)
-
-    if (!response.ok) {
-      console.error(response)
-      throw new Error('Twitter API Error')
-    }
-
-    const twitterAPIResponse = {
-      status: response.status,
-      headers: Object.fromEntries(response.headers.entries()),
-      body: await response.json(),
-    }
-
-    output.push({
-      request: { url, ...twitterAPIRequest },
-      response: twitterAPIResponse,
-    })
-
-    return response
-  }
 }
