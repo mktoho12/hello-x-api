@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 
 export default function Public() {
@@ -57,42 +58,64 @@ export default function Public() {
   }
 
   return (
-    <main className="container max-w-3xl mx-auto p-4">
-      {signedIn ? (
-        <div>
-          <h1 className="text-3xl text-center font-bold my-4">
-            Xでログインしています
-          </h1>
-          <div className="flex items-center space-x-4">
-            <Input
-              placeholder="今何してる？"
-              value={text}
-              onChange={e => setText(e.target.value)}
-            />
-            <Button onClick={postTweet} className="mt-0">
-              Post!
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div>
-          <h1 className="text-3xl text-center font-bold my-4">
-            ログインしていません
-          </h1>
-          <div className="flex justify-center">
-            {authURL && (
-              <Button
-                onClick={() => {
-                  location.href = authURL
-                }}
-              >
-                ツイッターでログインする
+    <div className="min-h-screen flex flex-col justify-center">
+      <main className="container max-w-3xl mx-auto p-4 h-full flex-grow">
+        {signedIn ? (
+          <div>
+            <h1 className="text-3xl text-center font-bold my-4">
+              Xでログインしています
+            </h1>
+            <div className="flex items-center space-x-4">
+              <Input
+                placeholder="今何してる？"
+                value={text}
+                onChange={e => setText(e.target.value)}
+              />
+              <Button onClick={postTweet} className="mt-0">
+                Post!
               </Button>
-            )}
+            </div>
           </div>
+        ) : (
+          <div>
+            <h1 className="text-3xl text-center font-bold my-4">
+              ログインしていません
+            </h1>
+            <div className="flex justify-center">
+              {authURL && (
+                <Button
+                  onClick={() => {
+                    location.href = authURL
+                  }}
+                >
+                  ツイッターでログインする
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+        <pre>{JSON.stringify(output, null, 2)}</pre>
+      </main>
+      <footer>
+        <div className="container max-w-3xl mx-auto p-4">
+          <p className="text-center text-xl">
+            <a
+              href="https://github.com/mktoho12/hello-x-api"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex gap-2 justify-center items-center"
+            >
+              <Image
+                src="/github-mark.svg"
+                alt="Github"
+                width={24}
+                height={24}
+              />
+              Github
+            </a>
+          </p>
         </div>
-      )}
-      <pre>{JSON.stringify(output, null, 2)}</pre>
-    </main>
+      </footer>
+    </div>
   )
 }
