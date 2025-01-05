@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     )
   }
 
-  async function fetchPostTweetAPI(accessToken: string, status: string) {
+  async function fetchPostTweetAPI(accessToken: string, text: string) {
     const url = 'https://api.x.com/2/tweets'
     const twitterAPIRequest: RequestInit = {
       method: 'POST',
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${accessToken}`,
         'User-Agent': 'Twitter Client by mktoho',
       },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ text }),
     }
 
     return await fetch(url, twitterAPIRequest)
