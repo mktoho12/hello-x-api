@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       status: response.status,
       headers: Object.fromEntries(response.headers),
-      body: response.status === 200 ? await response.json() : '',
+      body: await response.json(),
     })
   } catch (error) {
     return NextResponse.json(
