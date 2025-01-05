@@ -1,9 +1,17 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useCallback, useEffect } from 'react'
+import { Suspense, useCallback, useEffect } from 'react'
 
-export default function PublicCallback() {
+export default function PublicCallbackPage() {
+  return (
+    <Suspense fallback={<p>loading...</p>}>
+      <PublicCallback />
+    </Suspense>
+  )
+}
+
+function PublicCallback() {
   const { state, code } = Object.fromEntries(useSearchParams().entries())
   const postToken = useCallback(_postToken, [])
   const router = useRouter()
