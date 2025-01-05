@@ -10,17 +10,22 @@ export async function POST(request: Request) {
   try {
     const { code, clientId } = await request.json()
 
-    const accessToken = await postOauth2Token({
-      code,
-      redirectURI: process.env.NEXT_PUBLIC_X_REDIRECT_URI,
-      clientId,
-      codeVerifier: 'challenge',
-    })
-
     const session = await getIronSession<Session>(
       await cookies(),
       sessionOptions
     )
+
+    if (!session.codeVerifier) {
+      throw new Error('Invalid session')
+    }
+
+    const accessToken = await postOauth2Token({
+      code,
+      redirectURI: process.env.NEXT_PUBLIC_X_REDIRECT_URI,
+      clientId,
+      codeVerifier: session.codeVerifier,
+    })
+
     session.accessToken = accessToken
     await session.save()
     // await fetchPostTweetAPI(accessToken, 'テストテスト')

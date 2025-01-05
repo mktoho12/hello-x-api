@@ -6,8 +6,13 @@ import { useEffect, useState } from 'react'
 
 export default function Public() {
   const [output, setOutput] = useState<{ [key: string]: object | number }>()
+  const [codeChallenge, setCodeChallenge] = useState<string>()
 
   const createAuthURL = () => {
+    if (!codeChallenge) {
+      return null
+    }
+
     const url = 'https://twitter.com/i/oauth2/authorize'
     const searchParams = new URLSearchParams({
       response_type: 'code',
@@ -15,8 +20,8 @@ export default function Public() {
       redirect_uri: process.env.NEXT_PUBLIC_X_REDIRECT_URI,
       scope: 'tweet.read tweet.write users.read offline.access',
       state: 'state',
-      code_challenge: 'challenge',
-      code_challenge_method: 'plain',
+      code_challenge: codeChallenge,
+      code_challenge_method: 'S256',
     })
     return `${url}?${searchParams.toString()}`
   }
@@ -29,6 +34,9 @@ export default function Public() {
       if (response.ok) {
         response.json().then(data => {
           setSignedIn(data.signed_in)
+          if (data.codeChallenge) {
+            setCodeChallenge(data.codeChallenge)
+          }
         })
       }
     })
@@ -72,13 +80,15 @@ export default function Public() {
             ログインしていません
           </h1>
           <div className="flex justify-center">
-            <Button
-              onClick={() => {
-                location.href = authURL
-              }}
-            >
-              ツイッターでログインする
-            </Button>
+            {authURL && (
+              <Button
+                onClick={() => {
+                  location.href = authURL
+                }}
+              >
+                ツイッターでログインする
+              </Button>
+            )}
           </div>
         </div>
       )}

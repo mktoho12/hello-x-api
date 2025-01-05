@@ -22,7 +22,7 @@ function PublicCallback() {
         clientId: process.env.NEXT_PUBLIC_X_CLIENT_ID,
         code,
       }).then(() => {
-        router.push('/public')
+        router.push('/')
       })
     }
   }, [code, postToken, router, state])
