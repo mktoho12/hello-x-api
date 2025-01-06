@@ -18,6 +18,12 @@ function PublicCallback() {
 
   useEffect(() => {
     if (state && code) {
+      const storedState = sessionStorage.getItem('state')
+      if (state !== storedState) {
+        throw new Error(
+          `CSRF Attack!! state: ${state}, storedState: ${storedState}`
+        )
+      }
       postToken({
         clientId: process.env.NEXT_PUBLIC_X_CLIENT_ID,
         code,
@@ -27,7 +33,7 @@ function PublicCallback() {
     }
   }, [code, postToken, router, state])
 
-  return <p>aaa</p>
+  return <p>ログインしています……</p>
 
   interface PostOAuthTokenProps {
     clientId: string

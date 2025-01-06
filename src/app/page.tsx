@@ -8,9 +8,10 @@ import { useEffect, useState } from 'react'
 export default function Public() {
   const [output, setOutput] = useState<{ [key: string]: object | number }>()
   const [codeChallenge, setCodeChallenge] = useState<string>()
+  const [state, setState] = useState<string>()
 
   const createAuthURL = () => {
-    if (!codeChallenge) {
+    if (!codeChallenge || !state) {
       return null
     }
 
@@ -20,10 +21,11 @@ export default function Public() {
       client_id: process.env.NEXT_PUBLIC_X_CLIENT_ID,
       redirect_uri: process.env.NEXT_PUBLIC_X_REDIRECT_URI,
       scope: 'tweet.read tweet.write users.read offline.access',
-      state: 'state',
+      state,
       code_challenge: codeChallenge,
       code_challenge_method: 'S256',
     })
+
     return `${url}?${searchParams.toString()}`
   }
 
@@ -37,6 +39,10 @@ export default function Public() {
           setSignedIn(data.signed_in)
           if (data.codeChallenge) {
             setCodeChallenge(data.codeChallenge)
+          }
+          if (data.state) {
+            setState(data.state)
+            sessionStorage.setItem('state', data.state)
           }
         })
       }

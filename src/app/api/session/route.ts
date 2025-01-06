@@ -13,7 +13,7 @@ export async function GET() {
       sessionOptions
     )
 
-    const signature: { codeChallenge?: string; status?: string } = {}
+    const signature: { codeChallenge?: string; state?: string } = {}
     if (!session.accessToken) {
       const codeVerifier = crypto.randomBytes(32).toString('hex')
 
@@ -25,10 +25,10 @@ export async function GET() {
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
       signature.codeChallenge = codeChallenge
-      signature.status = nanoid()
+      signature.state = nanoid()
 
       session.codeVerifier = codeVerifier
-      session.status = signature.status
+      session.state = signature.state
       await session.save()
     }
     return NextResponse.json({ signed_in: !!session.accessToken, ...signature })
