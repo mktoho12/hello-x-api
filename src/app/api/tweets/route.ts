@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const response = await fetchPostTweetAPI(session.accessToken, text)
+    const response = await postTweetsAPI(session.accessToken, text)
     return NextResponse.json({
       status: response.status,
       headers: Object.fromEntries(response.headers),
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     )
   }
 
-  async function fetchPostTweetAPI(accessToken: string, text: string) {
+  async function postTweetsAPI(accessToken: string, text: string) {
     const url = 'https://api.x.com/2/tweets'
     const twitterAPIRequest: RequestInit = {
       method: 'POST',

@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 export default function Public() {
   const [output, setOutput] = useState<{ [key: string]: object | number }>()
@@ -49,9 +49,35 @@ export default function Public() {
     })
   }, [])
 
+  interface User {
+    id: string
+    username: string
+    name: string
+    profile_image_url: string
+  }
+  const [user, setUser] = useState<User>()
+  const getUsersMeAPI = useCallback(async () => {
+    if (signedIn) {
+      const response = await fetch('/api/users/me')
+      if (response.ok) {
+        const responseBody = await response.json()
+        setOutput(responseBody)
+        setUser({
+          id: responseBody.body.data.id,
+          username: responseBody.body.data.username,
+          name: responseBody.body.data.name,
+          profile_image_url: responseBody.body.data.profile_image_url,
+        })
+      }
+    }
+  }, [signedIn])
+  useEffect(() => {
+    getUsersMeAPI()
+  }, [getUsersMeAPI])
+
   const [text, setText] = useState('')
   const postTweet = async () => {
-    const response = await fetch('/api/postTweet', {
+    const response = await fetch('/api/tweets', {
       body: JSON.stringify({ text }),
       method: 'POST',
     })
@@ -71,11 +97,35 @@ export default function Public() {
             <h1 className="text-3xl text-center font-bold my-4">
               Xでログインしています
             </h1>
+            {user && (
+              <div className="flex items-center justify-center space-x-4 my-4">
+                <Image
+                  src={user.profile_image_url}
+                  alt={user.name}
+                  width={48}
+                  height={48}
+                  className="rounded-full"
+                />
+                <div>
+                  <p>{user.name}</p>
+                  <p>
+                    <a
+                      href={`https://x.com/${user.username}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      @{user.username}
+                    </a>
+                  </p>
+                </div>
+              </div>
+            )}
             <div className="flex items-center space-x-4">
               <Input
                 placeholder="今何してる？"
                 value={text}
                 onChange={e => setText(e.target.value)}
+                className="h-32"
               />
               <Button onClick={postTweet} className="mt-0">
                 Post!
@@ -100,7 +150,10 @@ export default function Public() {
             </div>
           </div>
         )}
-        <pre>{JSON.stringify(output, null, 2)}</pre>
+        <h2 className="text-xl text-center font-bold mt-8 my-4">デバッグ</h2>
+        <pre className="my-4 max-h-64 overflow-auto border border-gray-300 p-2">
+          {JSON.stringify(output, null, 2)}
+        </pre>
       </main>
       <footer>
         <div className="container max-w-3xl mx-auto p-4">

@@ -28,7 +28,6 @@ export async function POST(request: Request) {
 
     session.accessToken = accessToken
     await session.save()
-    // await fetchPostTweetAPI(accessToken, 'テストテスト')
 
     return NextResponse.json(output)
   } catch (error) {
