@@ -1,7 +1,8 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Suspense, useCallback, useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
+import { postOAuth2AccessToken } from './actions'
 
 export default function PublicCallbackPage() {
   return (
@@ -12,47 +13,26 @@ export default function PublicCallbackPage() {
 }
 
 function PublicCallback() {
-  const { state, code } = Object.fromEntries(useSearchParams().entries())
-  const postToken = useCallback(_postToken, [])
+  const searchParams = useSearchParams()
+  const { state, code } = Object.fromEntries(searchParams.entries())
   const router = useRouter()
 
   useEffect(() => {
-    if (state && code) {
-      const storedState = sessionStorage.getItem('state')
-      if (state !== storedState) {
-        throw new Error(
-          `CSRF Attack!! state: ${state}, storedState: ${storedState}`
-        )
-      }
-      postToken({
-        clientId: process.env.NEXT_PUBLIC_X_CLIENT_ID,
-        code,
-      }).then(() => {
+    const postToken = async () => {
+      if (state && code) {
+        await postOAuth2AccessToken({ code, state })
         router.push('/')
-      })
-    }
-  }, [code, postToken, router, state])
-
-  return <p>ログインしています……</p>
-
-  interface PostOAuthTokenProps {
-    clientId: string
-    code: string
-  }
-
-  async function _postToken({ clientId, code }: PostOAuthTokenProps) {
-    const url = '/api/callback'
-    const request: RequestInit = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'User-Agent': 'Twitter Client by mktoho',
-      },
-      body: JSON.stringify({ clientId, code }),
+      }
     }
 
-    const response = await fetch(url, request)
+    postToken()
+  }, [code, router, state])
 
-    return await response.json()
-  }
+  return (
+    <div className="min-h-screen flex flex-col justify-center">
+      <main className="container max-w-3xl mx-auto p-4 h-full flex-grow">
+        <p>ログインしています……</p>
+      </main>
+    </div>
+  )
 }

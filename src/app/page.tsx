@@ -3,7 +3,15 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import Image from 'next/image'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
+import {
+  deleteSession,
+  generateCodeChallenge,
+  getUsersMeAPI,
+  isSignedIn,
+  postTweetsAPI,
+} from './actions'
+import { refreshOAuth2AccessToken } from './callback/actions'
 
 export default function Public() {
   const [output, setOutput] = useState<{ [key: string]: object | number }>()
@@ -31,23 +39,38 @@ export default function Public() {
 
   const authURL = createAuthURL()
 
-  const [signedIn, setSignedIn] = useState(false)
   useEffect(() => {
-    fetch('/api/session').then(response => {
-      if (response.ok) {
-        response.json().then(data => {
-          setSignedIn(data.signed_in)
-          if (data.codeChallenge) {
-            setCodeChallenge(data.codeChallenge)
-          }
-          if (data.state) {
-            setState(data.state)
-            sessionStorage.setItem('state', data.state)
-          }
+    const prepareSignIn = async () => {
+      const signedIn = await isSignedIn()
+      setSignedIn(signedIn)
+    }
+
+    prepareSignIn()
+  }, [])
+
+  const [signedIn, setSignedIn] = useState(false)
+
+  useEffect(() => {
+    ;(async function () {
+      if (!signedIn) {
+        const { codeChallenge, state } = await generateCodeChallenge()
+        setCodeChallenge(codeChallenge)
+        setState(state)
+        sessionStorage.setItem('state', state)
+      } else {
+        await refreshOAuth2AccessToken()
+        const { status, headers, body } = await getUsersMeAPI()
+        setOutput({ status, headers, body })
+        const { id, username, name, profile_image_url } = body.data
+        setUser({
+          id,
+          username,
+          name,
+          profile_image_url,
         })
       }
-    })
-  }, [])
+    })()
+  }, [signedIn])
 
   interface User {
     id: string
@@ -56,37 +79,23 @@ export default function Public() {
     profile_image_url: string
   }
   const [user, setUser] = useState<User>()
-  const getUsersMeAPI = useCallback(async () => {
-    if (signedIn) {
-      const response = await fetch('/api/users/me')
-      if (response.ok) {
-        const responseBody = await response.json()
-        setOutput(responseBody)
-        setUser({
-          id: responseBody.body.data.id,
-          username: responseBody.body.data.username,
-          name: responseBody.body.data.name,
-          profile_image_url: responseBody.body.data.profile_image_url,
-        })
-      }
-    }
-  }, [signedIn])
-  useEffect(() => {
-    getUsersMeAPI()
-  }, [getUsersMeAPI])
 
   const [text, setText] = useState('')
   const postTweet = async () => {
-    const response = await fetch('/api/tweets', {
-      body: JSON.stringify({ text }),
-      method: 'POST',
-    })
+    const { status, headers, body } = await postTweetsAPI(text)
+    setOutput(status === 201 ? { status, headers, body } : {})
 
-    setOutput(response.status === 200 ? await response.json() : {})
-
-    if (response.ok && output?.status === 200) {
+    if (status === 201) {
       setText('')
     }
+  }
+
+  async function logout() {
+    sessionStorage.clear()
+    await deleteSession()
+    setSignedIn(false)
+    setUser(undefined)
+    setOutput(undefined)
   }
 
   return (
@@ -131,6 +140,9 @@ export default function Public() {
                 Post!
               </Button>
             </div>
+            <div className="w-full justify-end my-4">
+              <Button onClick={() => logout()}>Logout</Button>
+            </div>
           </div>
         ) : (
           <div>
@@ -150,10 +162,16 @@ export default function Public() {
             </div>
           </div>
         )}
-        <h2 className="text-xl text-center font-bold mt-8 my-4">デバッグ</h2>
-        <pre className="my-4 max-h-64 overflow-auto border border-gray-300 p-2">
-          {JSON.stringify(output, null, 2)}
-        </pre>
+        {output && (
+          <>
+            <h2 className="text-xl text-center font-bold mt-8 my-4">
+              デバッグ
+            </h2>
+            <pre className="my-4 max-h-64 overflow-auto border border-gray-300 p-2">
+              {JSON.stringify(output, null, 2)}
+            </pre>
+          </>
+        )}
       </main>
       <footer>
         <div className="container max-w-3xl mx-auto p-4">
